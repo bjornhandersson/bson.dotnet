@@ -1,7 +1,12 @@
-namespace bson.Dispatcher;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-public interface IAsyncDispatcher : IDisposable
+namespace bson.Dispatcher
 {
-    Task EnqueueAsync(int partitionKey, Func<CancellationToken, Task> action);
-    Task StopAsync();
+    public interface IAsyncDispatcher : IDisposable
+    {
+        Task EnqueueAsync(int partitionKey, Func<CancellationToken, Task> action);
+        Task StopAsync();
+    }
 }
