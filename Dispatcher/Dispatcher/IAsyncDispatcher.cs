@@ -6,7 +6,10 @@ namespace bson.Dispatcher
 {
     public interface IAsyncDispatcher : IDisposable
     {
-        Task EnqueueAsync(int partitionKey, Func<CancellationToken, Task> action);
+        ValueTask EnqueueAsync(int partition, Func<CancellationToken, ValueTask> action);
+
+        ValueTask EnqueueAsync(byte[] partitionKey, Func<CancellationToken, ValueTask> action);
+
         Task StopAsync();
     }
 }
