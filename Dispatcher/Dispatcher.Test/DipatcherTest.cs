@@ -3,13 +3,14 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using bson.Dispatcher.Hash;
+using FluentAssertions;
 
 namespace bson.Dispatcher.Test
 {
     public class AsyncDispatcherTest
     {
-        [TestCase(PartitionKeyAlgorithm.MurmurHash2, 0.06)]
-        [TestCase(PartitionKeyAlgorithm.BasicHash, 0.000001)]
+        [TestCase(PartitionKeyAlgorithm.Murmur2, 0.06)]
+        [TestCase(PartitionKeyAlgorithm.FNV1a, 0.000001)]
         public void Hashes_Should_distribute_evenly(
             PartitionKeyAlgorithm keyAlgorithm,
             decimal tolerancePct
@@ -17,8 +18,8 @@ namespace bson.Dispatcher.Test
         {
             IHashGenerator hashGenerator = keyAlgorithm switch
             {
-                PartitionKeyAlgorithm.BasicHash => new BasicHash(),
-                PartitionKeyAlgorithm.MurmurHash2 => new MurmurHash2(),
+                PartitionKeyAlgorithm.FNV1a => new FNV1a(),
+                PartitionKeyAlgorithm.Murmur2 => new MurmurHash2(),
                 _ => throw new ArgumentOutOfRangeException(
                     nameof(keyAlgorithm),
                     keyAlgorithm,
@@ -41,7 +42,7 @@ namespace bson.Dispatcher.Test
         }
 
         [Test]
-        public async Task Dispatcher_Should_apply_backpressure_when_capacity_is_reached()
+        public async Task Dispatcher_Should_apply_back_pressure_when_capacity_is_reached()
         {
             // Arrange
             int partitions = 2;
@@ -56,19 +57,17 @@ namespace bson.Dispatcher.Test
             for (int i = 0; i < 4; i++)
             {
                 int partition = i % partitions;
-                // Fill up the dispatcher
                 await dispatcher.EnqueueAsync(
                     partition,
                     async (_) =>
                     {
-                        taskCompleted++;
+                        Interlocked.Increment(ref taskCompleted);
                         await completed.Task;
-                        Console.WriteLine("Task completed");
                     }
                 );
             }
-
-            // Ensure we timeout when enqueuing more tasks
+            
+            // Enqueue a task that will timeout
             var enqueueTask = dispatcher.EnqueueAsync(
                 partition: 0,
                 async (_) =>
@@ -82,14 +81,14 @@ namespace bson.Dispatcher.Test
             var completedTask = await Task.WhenAny(enqueueTask.AsTask(), timeoutTask);
 
             // Assert
-            Assert.AreEqual(completedTask, timeoutTask, "Expect timeout");
-            Assert.IsFalse(enqueueTask.IsCompleted);
+            completedTask.Should().Be(timeoutTask, because: "Expected timeout");
+            enqueueTask.IsCompleted.Should().BeFalse(because: "Task should have timed out");
 
             // Free up the dispatcher
             completed.SetResult(true);
             await completedTask;
-
-            Assert.AreEqual(5, taskCompleted);
+            
+            taskCompleted.Should().Be(5);
         }
 
         [Test]

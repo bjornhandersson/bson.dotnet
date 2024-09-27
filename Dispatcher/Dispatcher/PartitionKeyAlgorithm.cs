@@ -2,7 +2,7 @@ namespace bson.Dispatcher
 {
     public enum PartitionKeyAlgorithm
     {
-        BasicHash,
-        MurmurHash2,
+        FNV1a,
+        Murmur2,
     }
 }

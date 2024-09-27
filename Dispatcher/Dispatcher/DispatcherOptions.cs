@@ -32,6 +32,6 @@ namespace bson.Dispatcher
         public Action<Exception> ExceptionHandler { get; set; } = (_) => { };
 
         public PartitionKeyAlgorithm PartitionKeyAlgorithm { get; set; } =
-            PartitionKeyAlgorithm.MurmurHash2;
+            PartitionKeyAlgorithm.Murmur2;
     }
 }

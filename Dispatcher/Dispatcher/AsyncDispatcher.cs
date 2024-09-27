@@ -27,8 +27,8 @@ namespace bson.Dispatcher
             _cancellationTokenSource = new CancellationTokenSource();
             _hashGenerator = _options.PartitionKeyAlgorithm switch
             {
-                PartitionKeyAlgorithm.BasicHash => new BasicHash(),
-                PartitionKeyAlgorithm.MurmurHash2 => new MurmurHash2(),
+                PartitionKeyAlgorithm.FNV1a => new FNV1a(),
+                PartitionKeyAlgorithm.Murmur2 => new MurmurHash2(),
                 _ => throw new ArgumentOutOfRangeException(
                     nameof(_options.PartitionKeyAlgorithm),
                     $"Unsupported partition key algorithm: {_options.PartitionKeyAlgorithm}"

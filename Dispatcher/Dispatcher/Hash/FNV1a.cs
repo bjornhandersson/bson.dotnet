@@ -1,6 +1,6 @@
 namespace bson.Dispatcher.Hash
 {
-    public class BasicHash : IHashGenerator
+    public class FNV1a : IHashGenerator
     {
         const int PRIME = 16777619;
 
